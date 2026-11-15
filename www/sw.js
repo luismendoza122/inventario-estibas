@@ -1,7 +1,7 @@
 // Service worker del inventario (versión en la nube): la planilla del operador abre aunque se caiga la señal.
 // Sube VERSION cada vez que cambies archivos de esta carpeta.
-const VERSION = 'inventario-nube-v1';
-const ARCHIVOS = ['./', './index.html', './admin.js', './admin.css', './contar.html', './contar.js', './contar.css', './styles.css', './nube.js', './icons/icono.svg', './icons/icono-192.png', './manifest.webmanifest'];
+const VERSION = 'inventario-nube-v2';
+const ARCHIVOS = ['./', './index.html', './admin.js', './admin.css', './contar.html', './contar.js', './contar.css', './styles.css', './nube.js', './puente-drive.js', './icons/icono.svg', './icons/icono-192.png', './manifest.webmanifest'];
 
 self.addEventListener('install', (e) => e.waitUntil(caches.open(VERSION).then((c) => Promise.all(ARCHIVOS.map((u) => c.add(u).catch(() => null)))).then(() => self.skipWaiting())));
 self.addEventListener('activate', (e) => e.waitUntil(

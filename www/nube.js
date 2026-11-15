@@ -106,5 +106,5 @@ const NUBE = (() => {
   }
 
   const enlaceOperador = (token) => `${PAGINA}contar.html?t=${encodeURIComponent(token)}${propia && local ? `&nube=${encodeURIComponent(propia)}` : ''}`;
-  return { FUNCION, PAGINA, leer, guardar, dispositivo, pedir, iniciarSesion, acceso, guardarCodigo, salir, aBlob, descargar, enlaceOperador };
+  return { FUNCION, LLAVE, PAGINA, leer, guardar, dispositivo, pedir, iniciarSesion, acceso, guardarCodigo, salir, aBlob, descargar, enlaceOperador };
 })();

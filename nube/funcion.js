@@ -1,15 +1,15 @@
 // Función "inventario" de Supabase (armada desde app-conteo-estibas/inventario-nube con npm run empaquetar).
 // NO editar a mano: se genera. La función en la nube carga este archivo por su commit fijo.
-// ../../../../tmp/funcion-DRSFk0/index.ts
+// ../../../../tmp/funcion-Ubu6H0/index.ts
 import postgres from "npm:postgres@3.4.5";
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/rutas.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/rutas.js
 import { z as z3 } from "npm:zod@3.25.76";
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/inventario.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/inventario.js
 import { z } from "npm:zod@3.25.76";
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/util.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/util.js
 var ErrorNegocio = class extends Error {
   constructor(mensaje, status = 400, detalle) {
     super(mensaje);
@@ -36,7 +36,7 @@ function nuevoToken() {
 }
 var esRepetido = (e) => /UNIQUE|duplicate key|23505/i.test(`${e?.code || ""} ${e?.message || ""}`);
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/plantilla.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/plantilla.js
 function modulosPorNumero(final) {
   const lista = [];
   for (let i = 1; i <= final; i++) if (i % 3 !== 0) lista.push(String(i).padStart(3, "0"));
@@ -57,7 +57,7 @@ function evaluarCasilla(texto) {
   return t.split("+").reduce((a, n2) => a + Number(n2), 0);
 }
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/inventario.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/inventario.js
 var textoONulo = (t) => t == null || !String(t).trim() ? null : String(t).trim();
 var id = z.coerce.number().int().positive();
 async function colores(db) {
@@ -961,7 +961,7 @@ async function eventos(db, invId) {
   ).all(invId);
 }
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/dashboard.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/dashboard.js
 var TITULO = "PLANTILLA DE INVENTARIO ATS R10 VALLEDUPAR";
 var esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 var num = (n2) => (n2 < 0 ? "\u2212" : "") + String(Math.abs(Math.round(n2 || 0))).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -1283,7 +1283,7 @@ footer{color:var(--tenue);font-size:.8rem;text-align:center;margin-top:20px}
 </html>`;
 }
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/excel.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/excel.js
 var AZUL = "FF1F3864";
 var NOMBRE_ESTADO2 = {
   ok: "Cuadra",
@@ -1449,7 +1449,7 @@ function armarLibro(ExcelJS, { r, cruces, eventos: bitacora }, { elaboro } = {})
   return libro;
 }
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/aura.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/aura.js
 import { z as z2 } from "npm:zod@3.25.76";
 var normal = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[¿?¡!.,;:()"'«»]/g, " ").replace(/\s+/g, " ").trim();
 var VACIAS = new Set("a al como con cual cuales de del el en es esta este esto hay la las lo los me mi mis o para por que se si su sus te tu un una uno y yo hago puedo debo quiero necesito favor aura hola dime explica explicame ayudame ayuda".split(" "));
@@ -1500,6 +1500,19 @@ var BASE = [
 \u2022 Para cambiar algo (enlaces, asignaciones, reconteos, repartir pasillos\u2026) te dejo una PROPUESTA: nada se hace sin que toques Aprobar.
 \u2022 Lo que no s\xE9 lo paso a THEMENDO en Copilot con el contexto del inventario; la respuesta que pegues queda guardada.
 \u2022 Aprendo de las lecciones de inventario que THEMENDO guarda en su Cuaderno.`
+  },
+  {
+    id: "drive",
+    titulo: "Enlazar Google Drive",
+    claves: [["drive", "google", "carpeta", "puente"]],
+    minimo: 1,
+    respuesta: `Para guardar el Excel y el dashboard en Google Drive (pesta\xF1a Drive):
+1. Pega la direcci\xF3n de una o varias carpetas de Drive (una por l\xEDnea) y toca "Crear el c\xF3digo del puente". Tambi\xE9n puedes tocar "Ped\xEDrselo a THEMENDO": \xE9l te arma el mismo c\xF3digo.
+2. Abre script.google.com con la cuenta due\xF1a de las carpetas \u2192 Nuevo proyecto \u2192 pega el c\xF3digo \u2192 Guardar.
+3. Implementar \u2192 Nueva implementaci\xF3n \u2192 Aplicaci\xF3n web. Ejecutar como: Yo. Qui\xE9n tiene acceso: Cualquier persona \u2192 Implementar \u2192 Autorizar.
+4. Copia la URL que termina en /exec, p\xE9gala en el paso 2 de la pesta\xF1a Drive y toca "Guardar y probar".
+5. Ya puedes tocar "Enviar Excel del inventario" o "Enviar dashboard". Si reenv\xEDas, el archivo anterior va a la papelera de Drive (nunca se borra).
+El puente solo atiende a los administradores y solo escribe en esas carpetas.`
   },
   {
     id: "copilot",
@@ -2315,7 +2328,7 @@ ${p.resumen}`, rapida: { id: local.id, titulo: local.titulo }, ...vacio, propues
   return { chat, paraCopilot, propuestas, aprobar, rechazar, notas, agregarNota, borrarNota, respuestas, guardarRespuesta, borrarRespuesta, vigilantes, aprenderDeCopilot, crearPropuesta: (invId, accion, args) => crearPropuesta(contexto(invId), accion, args) };
 }
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/rutas.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/rutas.js
 var nombreArchivo = (t) => `${t}`.replace(/[^\w\- áéíóúñÁÉÍÓÚÑ]/g, "").trim().replace(/\s+/g, "_") || "inventario";
 var CREADO = /* @__PURE__ */ Symbol("creado");
 var creado = (valor) => ({ [CREADO]: true, valor });
@@ -2460,6 +2473,25 @@ function tabla(opciones) {
   ruta("POST", "admin/aura/alertas/:id/descartar", A, ({ aura, p }) => aura.vigilantes.descartar(n(p.id)));
   ruta("POST", "admin/aura/alertas/:id/proponer", A, ({ aura, p }) => creado(aura.vigilantes.proponerArreglo(n(p.id))));
   ruta("GET", "admin/aura/cambios", A, () => []);
+  const leerPuente = async (db) => {
+    const f = await db.prepare("SELECT valor FROM ajustes WHERE clave = ?").get("puente_drive");
+    try {
+      const v = f ? JSON.parse(f.valor) : {};
+      return { url: v.url || "", carpetas: Array.isArray(v.carpetas) ? v.carpetas : [], actualizado: v.actualizado || null, por: v.por || "" };
+    } catch {
+      return { url: "", carpetas: [], actualizado: null, por: "" };
+    }
+  };
+  ruta("GET", "admin/drive", A, ({ db }) => leerPuente(db));
+  ruta("PUT", "admin/drive", A, async ({ db, cuerpo, acceso }) => {
+    const d = validar(z3.object({
+      url: z3.string().trim().max(200).refine((u) => u === "" || /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(u), "La direcci\xF3n del puente debe empezar por https://script.google.com/macros/s/ y terminar en /exec").default(""),
+      carpetas: z3.array(z3.object({ id: z3.string().regex(/^[A-Za-z0-9_-]{10,80}$/), nombre: z3.string().trim().max(120).default("") })).max(10).default([])
+    }), cuerpo || {});
+    const valor = { ...d, actualizado: (/* @__PURE__ */ new Date()).toISOString(), por: acceso.rol === "propietario" ? "Administraci\xF3n" : acceso.nombre || "Administrador" };
+    await db.prepare("INSERT INTO ajustes (clave, valor) VALUES (?, ?) ON CONFLICT (clave) DO UPDATE SET valor = excluded.valor").run("puente_drive", JSON.stringify(valor));
+    return valor;
+  });
   ruta("GET", "admin/administradores", "propietario", async ({ db }) => (await db.prepare("SELECT id, nombre, creado_en, ultimo_uso, vence_en, dispositivo FROM admins WHERE quitado = ? ORDER BY creado_en").all(false)).map(({ dispositivo, ...a }) => ({ ...a, celular: !!dispositivo })));
   ruta("POST", "admin/administradores", "propietario", async ({ db, cuerpo }) => {
     const d = validar(z3.object({ nombre: z3.string().trim().min(2).max(60), dias: z3.coerce.number().int().min(1).max(365).default(30) }), cuerpo || {});
@@ -2503,7 +2535,7 @@ function crearRutas(opciones = {}) {
   };
 }
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/sql.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/sql.js
 var AHORA = "to_char(clock_timestamp() AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD HH24:MI:SS')";
 var HOY = "to_char(clock_timestamp() AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD')";
 var cache = /* @__PURE__ */ new Map();
@@ -2592,7 +2624,7 @@ function convertir(fila, columnas) {
   return fila;
 }
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/adaptador-pg.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/adaptador-pg.js
 function crearAdaptadorPg(ejecutar) {
   let nivel = 0;
   let puntos = 0;
@@ -2662,7 +2694,7 @@ function normalizarError(e) {
   return e;
 }
 
-// ../../../../tmp/funcion-DRSFk0/nucleo/semilla.js
+// ../../../../tmp/funcion-Ubu6H0/nucleo/semilla.js
 var rango = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 var pad = (n2) => String(n2).padStart(2, "0");
 var ESTRUCTURA = [
@@ -2711,7 +2743,7 @@ async function sembrar(db) {
   })();
 }
 
-// ../../../../tmp/funcion-DRSFk0/index.ts
+// ../../../../tmp/funcion-Ubu6H0/index.ts
 var sql = postgres(Deno.env.get("SUPABASE_DB_URL"), { prepare: false, max: 4, idle_timeout: 20 });
 var URL_SB = Deno.env.get("SUPABASE_URL");
 var ANON = Deno.env.get("SUPABASE_ANON_KEY") || "";

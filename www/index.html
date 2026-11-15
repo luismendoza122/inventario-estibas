@@ -52,6 +52,7 @@
       <button data-v="totales" type="button">Totales</button>
       <button data-v="config" type="button">Pasillos</button>
       <button data-v="aura" type="button">✨ Aura <span id="aura-insignia" class="insignia" hidden></span></button>
+      <button data-v="drive" type="button">Drive</button>
       <button data-v="admins" type="button" id="pest-admins" hidden>Administradores</button>
     </nav>
 
@@ -251,6 +252,52 @@
           </div>
         </div>
       </section>
+      <!-- DRIVE: puente de Google Drive -->
+      <section id="v-drive" class="vista">
+        <div class="tarjeta">
+          <h2>Google Drive</h2>
+          <p class="tenue pequeno">Enlaza una o varias carpetas de Drive para guardar ahí el Excel y el dashboard de cada inventario. Funciona con un <strong>puente</strong>: un código pequeño de Google que se publica una sola vez en la cuenta dueña de las carpetas.</p>
+          <p id="dr-estado" class="chip gris">Sin conectar</p>
+        </div>
+        <div class="tarjeta">
+          <h3>1. Direcciones de las carpetas</h3>
+          <label for="dr-direcciones">Pega la dirección de cada carpeta (una por línea)</label>
+          <textarea id="dr-direcciones" rows="3" placeholder="https://drive.google.com/drive/folders/…"></textarea>
+          <div class="botones mt">
+            <button class="boton" type="button" id="dr-crear">Crear el código del puente</button>
+            <button class="boton secundario" type="button" id="dr-themendo">Pedírselo a THEMENDO</button>
+          </div>
+          <div id="dr-codigo-caja" hidden>
+            <p class="pequeno mt" id="dr-detectadas"></p>
+            <ol class="pequeno">
+              <li>Abre <a href="https://script.google.com/create" target="_blank" rel="noopener">script.google.com</a> con la cuenta dueña de las carpetas → borra lo que haya y pega el código → Guardar.</li>
+              <li><strong>Implementar → Nueva implementación →</strong> tipo <strong>Aplicación web</strong>. Ejecutar como: <strong>Yo</strong>. Quién tiene acceso: <strong>Cualquier persona</strong> → Implementar → Autorizar acceso.</li>
+              <li>Copia la <strong>URL de la aplicación web</strong> (termina en <code>/exec</code>) y pégala en el paso 2.</li>
+            </ol>
+            <textarea id="dr-codigo" rows="8" readonly spellcheck="false" aria-label="Código del puente"></textarea>
+            <div class="botones mt"><button class="boton chico" type="button" id="dr-copiar">Copiar código</button></div>
+          </div>
+        </div>
+        <div class="tarjeta">
+          <h3>2. Conectar el puente</h3>
+          <label for="dr-url">URL de la aplicación web (termina en /exec)</label>
+          <input id="dr-url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec">
+          <div class="botones mt">
+            <button class="boton" type="button" id="dr-guardar">Guardar y probar</button>
+            <button class="boton secundario" type="button" id="dr-quitar">Desconectar</button>
+          </div>
+        </div>
+        <div class="tarjeta" id="dr-enviar-caja" hidden>
+          <h3>3. Enviar a Drive</h3>
+          <label for="dr-carpeta">Carpeta</label>
+          <select id="dr-carpeta"></select>
+          <div class="botones mt">
+            <button class="boton" type="button" id="dr-excel">Enviar Excel del inventario</button>
+            <button class="boton secundario" type="button" id="dr-dashboard">Enviar dashboard</button>
+          </div>
+          <ul id="dr-enviados" class="aura-lista mt"></ul>
+        </div>
+      </section>
       <!-- ADMINISTRADORES (solo la cuenta principal la ve) -->
       <section id="v-admins" class="vista">
         <div class="tarjeta">
@@ -362,6 +409,7 @@
   <div id="impresion" aria-hidden="true"></div>
   <div id="aviso" class="aviso-flotante" role="status" aria-live="polite"></div>
   <script src="nube.js"></script>
+  <script src="puente-drive.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

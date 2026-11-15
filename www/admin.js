@@ -1190,6 +1190,7 @@ function irA(vista) {
   if (vista === 'cruce') intentar(cargarCruce)();
   if (vista === 'aura') intentar(() => cargarAura({ todo: true }))();
   if (vista === 'admins') intentar(cargarAdmins)();
+  if (vista === 'drive') intentar(cargarDrive)();
 }
 $$('.pestanas button').forEach((b) => b.addEventListener('click', () => irA(b.dataset.v)));
 
@@ -1203,6 +1204,69 @@ setInterval(() => {
     else if (!aura.pensando) cargarAura().catch(() => {});
   }
 }, 15000);
+
+// ---------- Google Drive (puente de Apps Script) ----------
+const drive = { url: '', carpetas: [] };
+const VERIFICAR_DRIVE = { url: `${NUBE.FUNCION}/api/admin/quien`, metodo: 'get', llave: NUBE.LLAVE };
+function pintarDrive() {
+  const conectado = PuenteDrive.esPuente(drive.url);
+  $('#dr-estado').className = `chip ${conectado ? 'ok' : 'gris'}`;
+  $('#dr-estado').textContent = conectado ? `Conectado · ${drive.carpetas.map((c) => c.nombre || c.id).join(', ') || 'carpetas del puente'}` : 'Sin conectar';
+  if (document.activeElement !== $('#dr-url')) $('#dr-url').value = drive.url;
+  $('#dr-enviar-caja').hidden = !conectado;
+  poner($('#dr-carpeta'), ...drive.carpetas.map((c) => h('option', { value: c.id }, c.nombre || c.id)));
+}
+async function cargarDrive() {
+  Object.assign(drive, await api('/drive'));
+  if (!$('#dr-direcciones').value && drive.carpetas.length) $('#dr-direcciones').value = drive.carpetas.map((c) => `https://drive.google.com/drive/folders/${c.id}`).join('\n');
+  pintarDrive();
+}
+$('#dr-crear').addEventListener('click', () => {
+  const carpetas = PuenteDrive.carpetasDe($('#dr-direcciones').value);
+  if (!carpetas.length) return avisar('Pega la dirección de una carpeta de Drive (https://drive.google.com/drive/folders/…)', 'error');
+  $('#dr-codigo').value = PuenteDrive.codigo({ app: 'Inventario de estibas', carpetas, verificar: VERIFICAR_DRIVE });
+  $('#dr-detectadas').textContent = `${carpetas.length} carpeta(s): ${carpetas.join(', ')}`;
+  $('#dr-codigo-caja').hidden = false;
+  avisar('Código del puente listo: cópialo y publícalo en script.google.com', 'ok');
+});
+$('#dr-copiar').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('#dr-codigo').value); avisar('Código copiado', 'ok'); }
+  catch { $('#dr-codigo').select(); avisar('Selecciona el código y cópialo', ''); }
+});
+$('#dr-themendo').addEventListener('click', async () => {
+  const dirs = $('#dr-direcciones').value.trim();
+  if (!dirs) return avisar('Pega primero la dirección de la carpeta', 'error');
+  const texto = `THEMENDO, crea el puente de Google Drive para el Inventario de estibas con estas carpetas:\n${dirs}`;
+  try { await navigator.clipboard.writeText(texto); avisar('Pedido copiado: pégalo en THEMENDO (Copilot)', 'ok'); } catch { prompt('Copia esto y pégalo en THEMENDO:', texto); }
+  window.open('https://m365.cloud.microsoft/chat/agent/T_0beb0366-1b5b-39eb-d032-63302b709bc4.357c5821-89ff-4709-8f75-b75d87754475.gpt.a7b3a646-f2a2-4c8d-a566-90c7e1e2e491', '_blank', 'noopener');
+});
+$('#dr-guardar').addEventListener('click', intentar(async () => {
+  const url = $('#dr-url').value.trim();
+  avisar('Probando el puente…');
+  const r = await PuenteDrive.probar(url);
+  const carpetas = (r.carpetas || []).map((c) => ({ id: c.id, nombre: String(c.nombre || '').slice(0, 120) }));
+  Object.assign(drive, await api('/drive', { method: 'PUT', body: { url, carpetas } }));
+  pintarDrive();
+  avisar(`Puente conectado: ${carpetas.map((c) => c.nombre).join(', ')}`, 'ok');
+}));
+$('#dr-quitar').addEventListener('click', intentar(async () => {
+  if (!confirm('¿Desconectar el puente de Drive? Los archivos que ya están en Drive no se tocan.')) return;
+  Object.assign(drive, await api('/drive', { method: 'PUT', body: { url: '', carpetas: [] } }));
+  pintarDrive();
+}));
+async function enviarADrive(tipo) {
+  if (!estado.invId) return avisar('Elige un inventario', 'error');
+  avisar(tipo === 'excel' ? 'Preparando Excel…' : 'Preparando dashboard…');
+  const archivo = await api(`/inventarios/${estado.invId}/${tipo}`, { blob: true });
+  const nombre = tipo === 'excel' ? `${estado.resumen.inventario.nombre}.xlsx` : `Dashboard ${estado.resumen.inventario.nombre}.html`;
+  const acceso = { ...(await NUBE.acceso()), dispositivo: NUBE.dispositivo() };
+  avisar('Enviando a Drive…');
+  const r = await PuenteDrive.llamar(drive.url, 'subir', { carpeta: $('#dr-carpeta').value, nombre, tipo: archivo.tipo, base64: archivo.base64 }, acceso);
+  $('#dr-enviados').prepend(h('li', {}, h('span', {}, `${r.nombre} `, h('a', { href: r.url, target: '_blank', rel: 'noopener' }, 'Abrir en Drive'))));
+  avisar(`Guardado en Drive: ${r.nombre}`, 'ok');
+}
+$('#dr-excel').addEventListener('click', intentar(() => enviarADrive('excel')));
+$('#dr-dashboard').addEventListener('click', intentar(() => enviarADrive('dashboard')));
 
 // ---------- Administradores (solo la cuenta principal) ----------
 const fecha = (iso) => (iso ? new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
