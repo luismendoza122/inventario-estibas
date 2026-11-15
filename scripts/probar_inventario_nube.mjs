@@ -87,5 +87,18 @@ await pedir('POST', `/api/admin/inventarios/${inv}/estado`, { cuerpo: { estado: 
 r = await pedir('DELETE', `/api/admin/inventarios/${inv}`, { cuerpo: { confirmar: nombre } });
 ok(r.status === 200 && /^inventario-/.test(r.body.respaldo || ''), `inventario de prueba borrado con copia (${r.body.respaldo})`);
 for (const o of (await pedir('GET', '/api/admin/operadores')).body.filter((x) => /^Prueba (Uno|Dos)$/.test(x.nombre))) await pedir('DELETE', `/api/admin/operadores/${o.id}`);
+// Puente de Google Drive (pestaña Drive)
+r = await pedir('GET', '/api/admin/drive', { admin: false });
+ok(r.status === 401, 'sin código no ve el puente de Drive');
+r = await pedir('GET', '/api/admin/drive');
+const puentePrevio = r.body;
+ok(r.status === 200 && 'url' in r.body, 'el administrador ve el puente de Drive');
+r = await pedir('PUT', '/api/admin/drive', { cuerpo: { url: 'https://evil.example.com/exec', carpetas: [] } });
+ok(r.status === 400, 'dirección de puente falsa rechazada');
+r = await pedir('PUT', '/api/admin/drive', { cuerpo: { url: 'https://script.google.com/macros/s/PRUEBA_auto_1/exec', carpetas: [{ id: '1PRUEBAautomatica000000000', nombre: '[PRUEBA]' }] } });
+ok(r.status === 200 && r.body.url.endsWith('/exec'), 'guardar el puente');
+r = await pedir('PUT', '/api/admin/drive', { cuerpo: { url: puentePrevio.url || '', carpetas: puentePrevio.carpetas || [] } });
+ok(r.status === 200, 'puente devuelto como estaba');
+
 console.log(`\n${fallas ? `✗ ${fallas} revisión(es) fallaron` : '✓ Todo bien'} en ${((Date.now() - t0) / 1000).toFixed(1)} s`);
 process.exit(fallas ? 1 : 0);
