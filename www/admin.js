@@ -50,9 +50,23 @@ function avisar(texto, tipo = '') {
 
 const estado = { clave: null, acceso: null, rol: '', vueltas: 0, invId: Number(sesion.leer('inventario')) || null, resumen: null, config: null, info: null, vista: 'tablero' };
 
+// La nube atiende un pedido a la vez: muchos pedidos juntos se quedaban esperando hasta 2 minutos
+// y terminaban en "Error interno". Aquí salen como máximo 2 a la vez y el resto espera su turno.
+const COLA = { activos: 0, max: 2, espera: [] };
+async function enTurno(fn) {
+  if (COLA.activos >= COLA.max) await new Promise((ok) => COLA.espera.push(ok));
+  COLA.activos++;
+  try { return await fn(); } finally { COLA.activos--; const sig = COLA.espera.shift(); if (sig) sig(); }
+}
 async function api(ruta, opciones = {}) {
+  if (/\/inventarios\/(null|undefined|NaN|0)(\/|$)/.test(ruta)) {
+    const e = new Error('Primero crea o elige un inventario (arriba, "+ Nuevo inventario").');
+    e.sinInventario = true;
+    throw e;
+  }
   if (!estado.acceso) estado.acceso = await NUBE.acceso();
-  const r = await NUBE.pedir(`/api/admin${ruta}`, { method: opciones.method || 'GET', body: opciones.body, acceso: estado.acceso });
+  const r = await enTurno(() => NUBE.pedir(`/api/admin${ruta}`, { method: opciones.method || 'GET', body: opciones.body, acceso: estado.acceso }));
+  if (r.status === 503 || r.status === 546) { const e = new Error(r.datos.error || 'La nube está ocupada. Intenta de nuevo en unos segundos.'); e.status = r.status; throw e; }
   if (r.status === 401) { salir(r.datos.error); const e = new Error(r.datos.error || 'Código no válido'); e.status = 401; throw e; }
   if (opciones.blob) {
     if (!r.ok || !r.datos.archivo) throw new Error(r.datos.error || 'No se pudo descargar');
@@ -66,7 +80,19 @@ async function api(ruta, opciones = {}) {
   }
   return datos;
 }
-const intentar = (fn) => async (...args) => { try { await fn(...args); } catch (e) { avisar(e.message, 'error'); } };
+const intentar = (fn) => {
+  let ocupado = false;
+  return async (...args) => {
+    if (ocupado) { // evita mandar el mismo pedido varias veces seguidas
+      if (args[0] instanceof Event && args[0].type === 'submit') args[0].preventDefault();
+      return;
+    }
+    ocupado = true;
+    const boton = args[0]?.submitter || (args[0]?.currentTarget instanceof HTMLButtonElement ? args[0].currentTarget : null);
+    if (boton) boton.disabled = true;
+    try { await fn(...args); } catch (e) { avisar(e.message, 'error'); } finally { ocupado = false; if (boton) boton.disabled = false; }
+  };
+};
 
 const ESTADOS = {
   sin_asignar: ['Sin asignar', 'gris'], asignado: ['Asignado', 'gris'], contando: ['Contando', ''], contado: ['Contado, sin verificar', ''],
@@ -582,6 +608,11 @@ $('#rp-guardar').addEventListener('click', intentar(async () => {
   avisar(`${nombres.length} nombre(s) guardados`, 'ok');
 }));
 function datosReparto() {
+  if (!estado.invId || !invActual()) {
+    abrirNuevoInventario();
+    throw new Error('Primero crea el inventario del mes; después reparte los pasillos.');
+  }
+  if (invActual().estado === 'cerrado') throw new Error('Este inventario está cerrado: no se pueden repartir pasillos.');
   const nombres = $$('#rp-operadores input:checked').map((i) => i.value);
   const cuerpo = { pasillos: $('#rp-pasillos-modo').value === 'todos' ? 'todos' : $('#rp-pasillos').value.trim() || 'todos' };
   if (nombres.length) cuerpo.nombres = nombres;

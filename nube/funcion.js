@@ -2744,7 +2744,9 @@ async function sembrar(db) {
 }
 
 // ../../../../tmp/funcion-Ubu6H0/index.ts
-var sql = postgres(Deno.env.get("SUPABASE_DB_URL"), { prepare: false, max: 4, idle_timeout: 20 });
+var sql = postgres(Deno.env.get("SUPABASE_DB_URL"), { prepare: false, max: 6, idle_timeout: 20 });
+// Conexión del pedido que tiene el turno (solo uno a la vez pasa el candado de abajo)
+var txActual = null;
 var URL_SB = Deno.env.get("SUPABASE_URL");
 var ANON = Deno.env.get("SUPABASE_ANON_KEY") || "";
 var CORS = {
@@ -2756,7 +2758,7 @@ var json = (d, s = 200) => new Response(JSON.stringify(d), { status: s, headers:
 var manejar = crearRutas({
   cargarExcel: async () => (await import("npm:exceljs@4.4.0")).default,
   // Lecciones que THEMENDO guarda en su Cuaderno (Copilot); las guías escritas a mano (origen "manual") no cuentan
-  leccionesCopilot: async () => await sql`SELECT id::text, texto, tema, estado FROM public.themendo_lecciones
+  leccionesCopilot: async () => await (txActual || sql)`SELECT id::text, texto, tema, estado FROM public.themendo_lecciones
       WHERE coalesce(origen, '') <> 'manual' ORDER BY creado DESC LIMIT 300`.catch(() => [])
 });
 function ejecutor(tx) {
@@ -2780,8 +2782,8 @@ async function esPropietario(req) {
   const [duenio] = await sql`SELECT id::text FROM auth.users ORDER BY created_at LIMIT 1`;
   return !!duenio && duenio.id === u.id;
 }
-async function quienEs(req, tx, dispositivo) {
-  if (await esPropietario(req)) return { rol: "propietario", nombre: "Administraci\xF3n" };
+async function quienEs(req, tx, dispositivo, propietario = false) {
+  if (propietario) return { rol: "propietario", nombre: "Administraci\xF3n" };
   const c = limpiarCodigo(req.headers.get("x-admin"));
   if (c.length < 10) return { rol: "", nombre: "" };
   const [a] = await tx`SELECT id::text, nombre, dispositivo, vence_en, ultimo_uso FROM inventario.admins WHERE hash = ${await sha256(`admin:${c}`)} AND NOT quitado`;
@@ -2804,19 +2806,28 @@ Deno.serve(async (req) => {
   let cuerpo;
   if (req.method !== "GET") cuerpo = await req.json().catch(() => ({}));
   try {
+    // Antes del turno: así el pedido no retiene el candado mientras habla con Auth
+    const propietario = ruta.startsWith("api/admin/") ? await esPropietario(req).catch(() => false) : false;
     const r = await sql.begin(async (tx) => {
       await tx.unsafe("SET LOCAL search_path = inventario, extensions, public");
+      // Si otro pedido tarda, se responde "ocupado" a los 25 s en vez de esperar 2 minutos
+      await tx.unsafe("SET LOCAL lock_timeout = '25s'");
       await tx.unsafe("SELECT pg_advisory_xact_lock(84726)");
+      txActual = tx;
+      try {
       const db = crearAdaptadorPg(ejecutor(tx));
       if (!sembrado) {
         await sembrar(db);
         sembrado = true;
       }
-      const acceso = ruta.startsWith("api/admin/") ? await quienEs(req, tx, dispositivo) : { rol: "" };
+      const acceso = ruta.startsWith("api/admin/") ? await quienEs(req, tx, dispositivo, propietario) : { rol: "" };
       if (ruta === "api/admin/quien") return { status: 200, cuerpo: { rol: acceso.rol || "ninguno", nombre: acceso.rol === "admin" ? acceso.nombre : "", motivo: acceso.motivo || "" } };
       const salida = await manejar(db, { metodo: req.method, ruta, cuerpo, consulta, acceso, dispositivo });
       if (salida.status >= 500) throw Object.assign(new Error("fall\xF3"), { salida });
       return salida;
+      } finally {
+        if (txActual === tx) txActual = null;
+      }
     }).catch((e) => {
       if (e?.salida) return e.salida;
       throw e;
@@ -2825,6 +2836,7 @@ Deno.serve(async (req) => {
     return json(r.cuerpo, r.status);
   } catch (e) {
     console.error(e);
+    if (e?.code === "55P03" || e?.code === "57014") return json({ error: "La nube est\xE1 ocupada atendiendo otro pedido. Intenta de nuevo en unos segundos." }, 503);
     return json({ error: "Error interno del servidor" }, 500);
   }
 });
