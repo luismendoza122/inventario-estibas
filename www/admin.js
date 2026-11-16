@@ -3,7 +3,7 @@
 'use strict';
 
 // Título que sale en la planilla impresa (igual a la de papel)
-const TITULO_PLANILLA = 'PLANTILLA DE INVENTARIO ATS R10 VALLEDUPAR';
+const TITULO_PLANILLA = 'PLANTILLA DE INVENTARIO DE ESTIBAS';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -1320,7 +1320,7 @@ async function cargarAdmins() {
 $('#form-admin').addEventListener('submit', intentar(async (e) => {
   e.preventDefault();
   const r = await api('/administradores', { method: 'POST', body: { nombre: $('#ad-nombre').value, dias: Number($('#ad-dias').value) || 30 } });
-  const texto = `Hola ${r.nombre}, quedaste como administrador del Inventario de estibas ATS R10.\n1. Abre: ${NUBE.PAGINA}\n2. Escribe tu código: ${r.codigo}\nSirve en un solo celular (el primero donde lo escribas) y vence el ${fecha(r.vence_en)}. No lo compartas.`;
+  const texto = `Hola ${r.nombre}, quedaste como administrador del Inventario de estibas.\n1. Abre: ${NUBE.PAGINA}\n2. Escribe tu código: ${r.codigo}\nSirve en un solo celular (el primero donde lo escribas) y vence el ${fecha(r.vence_en)}. No lo compartas.`;
   poner($('#ad-nuevo'),
     h('strong', {}, `Código de ${r.nombre} (se muestra solo esta vez):`),
     h('span', { class: 'codigo' }, r.codigo),

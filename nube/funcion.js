@@ -962,7 +962,7 @@ async function eventos(db, invId) {
 }
 
 // ../../../../tmp/funcion-Ubu6H0/nucleo/dashboard.js
-var TITULO = "PLANTILLA DE INVENTARIO ATS R10 VALLEDUPAR";
+var TITULO = "PLANTILLA DE INVENTARIO DE ESTIBAS";
 var esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 var num = (n2) => (n2 < 0 ? "\u2212" : "") + String(Math.abs(Math.round(n2 || 0))).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 var pct = (a, b) => b ? Math.round(a / b * 100) : 0;
@@ -2211,7 +2211,7 @@ function crearAura(db) {
   }
   async function paraCopilot(pregunta, invId) {
     return [
-      "Hola THEMENDO. Soy el administrador del inventario mensual de estibas ATS R10 Valledupar (app en la nube con Aura).",
+      "Hola THEMENDO. Soy el administrador del inventario mensual de estibas (app en la nube con Aura).",
       "Resp\xF3ndeme en espa\xF1ol sencillo, paso a paso. No me pidas claves.",
       "",
       `Estado actual:

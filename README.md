@@ -1,4 +1,4 @@
-# Inventario de estibas – ATS R10 Valledupar
+# Inventario de estibas
 
 Artefacto independiente del Entorno THEMENDO (aparte de Seguimiento de Recibo y Paletizado 3D).
 
